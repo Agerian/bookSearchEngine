@@ -7,80 +7,42 @@ import {
   Col
 } from 'react-bootstrap';
 
-// Import the GraphQL query
+// Import hooks from Apollo Client
+import { useQuery, useMutation } from '@apollo/client';
+// Import the `GET_ME` query and the `REMOVE_BOOK` mutation
 import { GET_ME } from '../utils/queries';
+import { REMOVE_BOOK } from '../utils/mutations';
 
-// Remove Original REST API call
-// import { getMe, deleteBook } from '../utils/API';
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
 
 const SavedBooks = () => {
-  // Remove state management for REST API call
-  // const [userData, setUserData] = useState({});
-
-  // use this to determine if `useEffect()` hook needs to run again
-  // const userDataLength = Object.keys(userData).length;
-
   // Use the `useQuery` Hook to execute the `GET_ME` query
-  const { loading, data } = useQuery(GET_ME);
+  const { loading, data, refetch } = useQuery(GET_ME);
   const userData = data?.me || {};
 
-  /* useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const token = Auth.loggedIn() ? Auth.getToken() : null;
+  // Previously, we fetched user data using a REST API call within useEffect and managed state with useState
+  // This has been replaced by the useQuery hook above, which directly fetches and manages the state of user data
 
-        if (!token) {
-          return false;
-        }
-
-        const response = await getMe(token);
-
-        if (!response.ok) {
-          throw new Error('something went wrong!');
-        }
-
-        const user = await response.json();
-        setUserData(user);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    getUserData();
-  }, [userDataLength]);
-  */
-
-  // create function that accepts the book's mongo _id value as param and deletes the book from the database
+  // Use the `useMutation` Hook to execute the `REMOVE_BOOK` mutation
+  const [removeBook] = useMutation(REMOVE_BOOK, {
+    // When the mutation completes, refetch the `GET_ME` query to update the UI with the current list of saved books
+    onCompleted: () => refetch(),
+    // Error handling for the mutation
+    onError: (error) => console.error(error),
+  });
+  
   const handleDeleteBook = async (bookId) => {
-    // Placeholder for delete operation using GraphQL
-    console.log('Delete book with ID: ', bookId);
-    /*
-    const token = Auth.loggedIn() ? Auth.getToken() : null;
-
-    if (!token) {
-      return false;
-    }
-
+    // This function now uses the `removeBook` mutation to remove a book from the user's saved books
     try {
-      const response = await deleteBook(bookId, token);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const updatedUser = await response.json();
-      setUserData(updatedUser);
-      // upon success, remove book's id from localStorage
-      removeBookId(bookId);
-    } catch (err) {
-      console.error(err);
+      await removeBook({ variables: { bookId } });
+      // The refetch in OnCompleted will update userData, so no need to update state or local storage here
+    } catch (error) {
+      console.error("Error removing book:", error);
     }
-    */
   };
 
-  // if data isn't here yet, say so
+  // Loading state is directly managed by the `useQuery` Hook
   if (loading) {
     return <h2>LOADING...</h2>;
   }
