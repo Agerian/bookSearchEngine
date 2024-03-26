@@ -29,7 +29,7 @@ To run this application locally, you'll need to have Node.js and MongoDB install
 1. Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/your-book-search-engine-repo.git
+git clone https://github.com/Agerian/bookSearchEngine
 ```
 
 2. Install the required dependencies:
